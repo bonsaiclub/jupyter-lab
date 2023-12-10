@@ -2,8 +2,8 @@ name: Build and publish docker image 🐳
 
 on:
   push:
-    branches:
-      - "feature/docker-image"
+    tags:
+      - 'v*.*.*'
 
 env:
   REGISTRY_IMAGE: aiakide/jupyter-lab
