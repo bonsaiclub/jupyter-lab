@@ -20,6 +20,9 @@ jupyter-lsp = "^2.2.1"
 plotly = "^5.18.0"
 
 
+[tool.poetry.group.dev.dependencies]
+pre-commit = "^3.6.0"
+
 [build-system]
 requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
