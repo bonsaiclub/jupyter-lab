@@ -1,0 +1,58 @@
+name: Build and publish docker image 🐳
+
+on:
+  push:
+    tags:
+      - 'v*.*.*'
+
+env:
+  REGISTRY_IMAGE: aiakide/jupyter-lab
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        platform:
+          - linux/amd64
+          - linux/arm64
+    steps:
+      - name: Checkout Repo ✅
+        uses: actions/checkout@v4
+      - name: Docker meta 💬
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.REGISTRY_IMAGE }}
+      - name: Set up QEMU 🏗️
+        uses: docker/setup-qemu-action@v3
+      - name: Set up Docker Buildx 🏗️
+        uses: docker/setup-buildx-action@v3
+      - name: Cache Docker layers 💾
+        uses: actions/cache@v3
+        with:
+          path: /tmp/.buildx-cache
+          key: ${{ inputs.runner_os }}-buildx-${{ inputs.github_sha }}
+          restore-keys: |
+            ${{ inputs.runner_os }}-buildx-
+      - name: Login to Docker Hub 🔐🐳
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+      - name: Build and push mlflow Docker image 🔨🐳
+        id: docker_build
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          push: ${{ github.event_name != 'pull_request' }}
+          builder: ${{ steps.buildx.outputs.name }}
+          cache-from: type=local,src=/tmp/.buildx-cache
+          cache-to: type=local,dest=/tmp/.buildx-cache
+          platforms: ${{ matrix.platform }}
+
+      - name: Image digest
+        run: echo ${{ steps.docker_build.outputs.digest }}
